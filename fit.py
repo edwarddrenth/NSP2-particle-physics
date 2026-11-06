@@ -23,6 +23,9 @@ def fitten_pulseheight(file,cutoff):
     params = mod.guess(counts, x= pulseheight)
     fit_result = mod.fit(counts, params, x= pulseheight)
 
+    uncertainty = fit_result.params['fwhm'].value
+
+
     pulseheight_max = fit_result.params['center'].value
     print(f"the peak is at a pulsheight of {pulseheight_max} mV")
 
@@ -32,7 +35,7 @@ def fitten_pulseheight(file,cutoff):
     plt.ylabel('counts')
     plt.grid(True)
     plt.show()
-    return pulseheight_max
+    return pulseheight_max, uncertainty
 
 
 # fitten('spectrum_Co_01')
@@ -42,21 +45,37 @@ def fitten_pulseheight(file,cutoff):
 # fitten('spectrum_Na22_02')
 # fitten('spectrum_Na22_07')
 
-pulseheight_list= [fitten_pulseheight('spectrum_Na22_07', 0), fitten_pulseheight('spectrum_Cs_01',200),fitten_pulseheight('spectrum_Cs_03',200), fitten_pulseheight('spectrum_Co_02',440) ]
+pulseheight_Na, fwhm_Na= fitten_pulseheight('spectrum_Na22_07', 0) 
+pulseheight_Cs1, fwhm_Cs1 =  fitten_pulseheight('spectrum_Cs_01',200)
+pulseheight_Cs3, fwhm_Cs3 = fitten_pulseheight('spectrum_Cs_03',200)
+pulseheight_Co2, fwhm_C02 = fitten_pulseheight('spectrum_Co_02',440) 
+pulseheight_array = np.array([pulseheight_Na,pulseheight_Cs1,pulseheight_Cs3,pulseheight_Co2])
 
 Energy_list = [510.99, 662,662, 1332.5]
+Energy_array = np.array(Energy_list)
+pulseheight_fwhm = np.array([fwhm_Na,fwhm_Cs1,fwhm_Cs3,fwhm_C02])
 
-def model(a,b, x ):
+def linear_mod(x,a,b ):
     return a*x+b
 
+mod = lmfit.Model(linear_mod)
+fit_result = mod.fit(Energy_array, a =5, b=0 , x= pulseheight_array, weights = 1/pulseheight_fwhm)
 
-fit_result = model.fit(pulseheight_list, a =5, b=0 , x= Energy_list)
+a= fit_result.best_values['a']
+b= fit_result.best_values['b']
 
+print(f'a = {a}')
+print(f'b = {b}')
 
-plt.scatter(Energy_list,pulseheight_list)
-plt.plot(Energy_list, fit_result.best_fit)
-plt.xlabel('energy (kev)')
-plt.ylabel('pulseheight (mV)')
+x = np.linspace(0,500,100)
+y = a*x +b
+
+plt.errorbar(pulseheight_array, Energy_array, xerr =pulseheight_fwhm, fmt ='o' )
+plt.plot(x, y)
+plt.xlabel('pulseheight (mV)')
+plt.ylabel('energy (keV)')
+plt.xlim(0,500)
+plt.ylim(0,1500)
 plt.grid(True)
 plt.show()
 
