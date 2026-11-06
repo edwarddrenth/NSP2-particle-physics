@@ -35,7 +35,7 @@ def fitten_pulseheight(file,cutoff):
     plt.ylabel('counts')
     plt.grid(True)
     plt.show()
-    return pulseheight_max, uncertainty
+    return pulseheight_max, uncertainty, pulseheight_list, counts
 
 
 # fitten('spectrum_Co_01')
@@ -45,10 +45,11 @@ def fitten_pulseheight(file,cutoff):
 # fitten('spectrum_Na22_02')
 # fitten('spectrum_Na22_07')
 
-pulseheight_Na, fwhm_Na= fitten_pulseheight('spectrum_Na22_07', 0) 
-pulseheight_Cs1, fwhm_Cs1 =  fitten_pulseheight('spectrum_Cs_01',200)
-pulseheight_Cs3, fwhm_Cs3 = fitten_pulseheight('spectrum_Cs_03',200)
-pulseheight_Co2, fwhm_C02 = fitten_pulseheight('spectrum_Co_02',440) 
+
+pulseheight_Na, fwhm_Na, pulseheight_list_Na, counts_Na = fitten_pulseheight('spectrum_Na22_07', 0) 
+pulseheight_Cs1, fwhm_Cs1, pulse_height_list_Cs1, counts_Cs1 =  fitten_pulseheight('spectrum_Cs_01',200)
+pulseheight_Cs3, fwhm_Cs3, pulseheight_list_Cs3, counts_Cs2 = fitten_pulseheight('spectrum_Cs_03',200)
+pulseheight_Co2, fwhm_C02, pulseheight_list_Co2, counts_Co2 = fitten_pulseheight('spectrum_Co_02',440) 
 pulseheight_array = np.array([pulseheight_Na,pulseheight_Cs1,pulseheight_Cs3,pulseheight_Co2])
 
 Energy_list = [510.99, 662,662, 1332.5]
@@ -79,3 +80,41 @@ plt.ylim(0,1500)
 plt.grid(True)
 plt.show()
 
+
+
+def fitten_Energy(list_pulseheight, list_counts, cutoff, a, b):
+    Energy_list = []
+    counts = []
+    for I in range(len(list_counts)):   
+        pulseheight = float(list_pulseheight[I])
+        count = list_counts[I]
+        Energy = a * pulseheight + b
+        #if pulseheight >= cutoff:
+        Energy_list.append(Energy)
+        counts.append(count)
+
+
+            
+    counts = np.array(counts)
+    Energy_list =np.array(Energy_list)
+
+    mod=lmfit.models.GaussianModel()
+    params = mod.guess(counts, x= Energy_list)
+    fit_result = mod.fit(counts, params, x= Energy_list)
+
+    uncertainty = fit_result.params['fwhm'].value
+
+
+    energy_max = fit_result.params['center'].value
+    print(f"the peak is at a pulsheight of {energy_max} mV")
+
+    plt.plot(Energy_list, counts)
+    plt.plot(Energy_list,fit_result.best_fit)
+    plt.xlabel('energy [keV]')
+    plt.ylabel('counts')
+    plt.grid(True)
+    plt.show()
+
+    return uncertainty
+
+fitten_Energy(pulseheight_list_Na, counts_Na, 0, a, b)
