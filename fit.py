@@ -138,10 +138,10 @@ print(f"resolution_Co_2 = {resolution_Co2} en fmwh_Co_2 = {fmwh_Co_2}")
 
 fmwh_Cs_1 = fitten_Energy(pulse_height_list_Cs1, counts_Cs1, 0, a, b)
 resolution_Cs1 = fmwh_Cs_1 / 510.99 * 100
-print(f"resolution_Co_2 = {resolution_Cs1} en fmwh_Co_2 = {fmwh_Cs_1}")
+print(f"resolution_Cs_1 = {resolution_Cs1} en fmwh_Co_2 = {fmwh_Cs_1}")
 
 
 fmwh_Cs3 = fitten_Energy(pulseheight_list_Cs3, counts_Cs3, 0, a, b)
 resolution_Cs3 = fmwh_Cs3 / 510.99 * 100
-print(f"resolution_Co_2 = {resolution_Cs3} en fmwh_Co_2 = {fmwh_Cs3}")
+print(f"resolution_Cs_3 = {resolution_Cs3} en fmwh_Co_2 = {fmwh_Cs3}")
 
