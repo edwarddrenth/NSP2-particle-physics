@@ -93,3 +93,55 @@ plt.ylim(0, 1500)
 plt.grid(True)
 plt.show()
 
+
+def fitten_Energy(list_pulseheight, list_counts, cutoff, a, b):
+    Energy_list = []
+    counts = []
+    for I in range(len(list_counts)):
+        pulseheight = float(list_pulseheight[I])
+        count = list_counts[I]
+        Energy = a * pulseheight + b
+        # if pulseheight >= cutoff:
+        Energy_list.append(Energy)
+        counts.append(count)
+
+    counts = np.array(counts)
+    Energy_list = np.array(Energy_list)
+
+    mod = lmfit.models.GaussianModel()
+    params = mod.guess(counts, x=Energy_list)
+    fit_result = mod.fit(counts, params, x=Energy_list)
+
+    uncertainty = fit_result.params["fwhm"].value
+
+    energy_max = fit_result.params["center"].value
+    print(f"the peak is at a pulsheight of {energy_max} mV")
+
+    plt.plot(Energy_list, counts)
+    plt.plot(Energy_list, fit_result.best_fit)
+    plt.xlabel("energy [keV]")
+    plt.ylabel("counts")
+    plt.grid(True)
+    plt.show()
+
+    return uncertainty
+
+
+# fitten_Energy(pulseheight_list_Na, counts_Na, 0, a, b)
+fmwh_Na = fitten_Energy(pulseheight_list_Na, counts_Na, 0, a, b)
+resolution_Na = fmwh_Na / 510.99 * 100
+print(f"resolution_Na = {resolution_Na} en fmwh_Na = {fmwh_Na}")
+
+fmwh_Co_2 = fitten_Energy(pulseheight_list_Co2, counts_Co2, 0, a, b)
+resolution_Co2 = fmwh_Co_2 / 510.99 * 100
+print(f"resolution_Co_2 = {resolution_Co2} en fmwh_Co_2 = {fmwh_Co_2}")
+
+fmwh_Cs_1 = fitten_Energy(pulse_height_list_Cs1, counts_Cs1, 0, a, b)
+resolution_Cs1 = fmwh_Cs_1 / 510.99 * 100
+print(f"resolution_Co_2 = {resolution_Cs1} en fmwh_Co_2 = {fmwh_Cs_1}")
+
+
+fmwh_Cs3 = fitten_Energy(pulseheight_list_Cs3, counts_Cs3, 0, a, b)
+resolution_Cs3 = fmwh_Cs3 / 510.99 * 100
+print(f"resolution_Co_2 = {resolution_Cs3} en fmwh_Co_2 = {fmwh_Cs3}")
+
