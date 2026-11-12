@@ -14,7 +14,7 @@ def fitten_pulseheight(file, cutoff):
             pulseheight = float(data_cut[0])
             if pulseheight >= cutoff:
                 pulseheight_list.append(float(data_cut[0]))
-                counts.append(float(data_cut[1]))
+                counts.append(float(data_cut[2]))
 
     counts = np.array(counts)
     pulseheight = np.array(pulseheight_list)
@@ -30,6 +30,7 @@ def fitten_pulseheight(file, cutoff):
 
     plt.plot(pulseheight, counts)
     plt.plot(pulseheight, fit_result.best_fit)
+    plt.title(file)
     plt.xlabel("pulseheight [mV]")
     plt.ylabel("counts")
     plt.grid(True)
@@ -45,25 +46,23 @@ def fitten_pulseheight(file, cutoff):
 # fitten('spectrum_Na22_07')
 
 
-pulseheight_Na, fwhm_Na, pulseheight_list_Na, counts_Na = fitten_pulseheight(
-    "spectrum_Na22_07", 0
-)
+# pulseheight_Na, fwhm_Na, pulseheight_list_Na, counts_Na = fitten_pulseheight(
+#     "spectrum_Na22_07", 0
+# )
 pulseheight_Cs1, fwhm_Cs1, pulse_height_list_Cs1, counts_Cs1 = fitten_pulseheight(
-    "spectrum_Cs_01", 200
-)
-pulseheight_Cs3, fwhm_Cs3, pulseheight_list_Cs3, counts_Cs3 = fitten_pulseheight(
-    "spectrum_Cs_03", 200
-)
-pulseheight_Co2, fwhm_C02, pulseheight_list_Co2, counts_Co2 = fitten_pulseheight(
-    "spectrum_Co_02", 440
-)
-pulseheight_array = np.array(
-    [pulseheight_Na, pulseheight_Cs1, pulseheight_Cs3, pulseheight_Co2]
+    "calibration_HPGE/spectrum_Cs_137_1", 200
 )
 
-Energy_list = [510.99, 662, 662, 1332.5]
+pulseheight_Co2, fwhm_C02, pulseheight_list_Co2, counts_Co2 = fitten_pulseheight(
+    "calibration_HPGE/spectrum_Co_60_2", 500
+)
+pulseheight_array = np.array(
+    [ pulseheight_Cs1, pulseheight_Co2]
+)
+
+Energy_list = [ 662, 1332.5]
 Energy_array = np.array(Energy_list)
-pulseheight_fwhm = np.array([fwhm_Na, fwhm_Cs1, fwhm_Cs3, fwhm_C02])
+pulseheight_fwhm = np.array([ fwhm_Cs1, fwhm_C02])
 
 
 def linear_mod(x, a, b):
@@ -81,27 +80,26 @@ b = fit_result.best_values["b"]
 print(f"a = {a}")
 print(f"b = {b}")
 
-x = np.linspace(0, 500, 100)
+x = np.linspace(0, 600, 100)
 y = a * x + b
 
 plt.errorbar(pulseheight_array, Energy_array, xerr=pulseheight_fwhm, fmt="o")
 plt.plot(x, y)
 plt.xlabel("pulseheight (mV)")
 plt.ylabel("energy (keV)")
-plt.xlim(0, 500)
+plt.xlim(0, 600)
 plt.ylim(0, 1500)
 plt.grid(True)
 plt.show()
 
 
-def fitten_Energy(list_pulseheight, list_counts, cutoff, a, b):
+def fitten_Energy(list_pulseheight, list_counts, a, b):
     Energy_list = []
     counts = []
     for I in range(len(list_counts)):
         pulseheight = float(list_pulseheight[I])
         count = list_counts[I]
         Energy = a * pulseheight + b
-        # if pulseheight >= cutoff:
         Energy_list.append(Energy)
         counts.append(count)
 
@@ -115,7 +113,7 @@ def fitten_Energy(list_pulseheight, list_counts, cutoff, a, b):
     uncertainty = fit_result.params["fwhm"].value
 
     energy_max = fit_result.params["center"].value
-    print(f"the peak is at a pulsheight of {energy_max} mV")
+    print(f"the peak is at a energy of {energy_max} keV")
 
     plt.plot(Energy_list, counts)
     plt.plot(Energy_list, fit_result.best_fit)
@@ -127,21 +125,18 @@ def fitten_Energy(list_pulseheight, list_counts, cutoff, a, b):
     return uncertainty
 
 
-# fitten_Energy(pulseheight_list_Na, counts_Na, 0, a, b)
-fmwh_Na = fitten_Energy(pulseheight_list_Na, counts_Na, 0, a, b)
-resolution_Na = fmwh_Na / 510.99 * 100
-print(f"resolution_Na = {resolution_Na} en fmwh_Na = {fmwh_Na}")
+# fitten_Energy(pulseheight_list_Na, counts_Na, a, b)
+# fmwh_Na = fitten_Energy(pulseheight_list_Na, counts_Na, a, b)
+# resolution_Na = fmwh_Na / 510.99 * 100
+# print(f"resolution_Na_22_ = {resolution_Na} en fmwh_Na = {fmwh_Na}")
 
-fmwh_Co_2 = fitten_Energy(pulseheight_list_Co2, counts_Co2, 0, a, b)
-resolution_Co2 = fmwh_Co_2 / 510.99 * 100
-print(f"resolution_Co_2 = {resolution_Co2} en fmwh_Co_2 = {fmwh_Co_2}")
+fmwh_Co_2 = fitten_Energy(pulseheight_list_Co2, counts_Co2, a, b)
+resolution_Co2 = fmwh_Co_2 / 1173.2 * 100
+print(f"resolution_Co_60_2 = {resolution_Co2} en fmwh_Co_2 = {fmwh_Co_2}")
 
-fmwh_Cs_1 = fitten_Energy(pulse_height_list_Cs1, counts_Cs1, 0, a, b)
-resolution_Cs1 = fmwh_Cs_1 / 510.99 * 100
-print(f"resolution_Cs_1 = {resolution_Cs1} en fmwh_Co_2 = {fmwh_Cs_1}")
+fmwh_Cs_1 = fitten_Energy(pulse_height_list_Cs1, counts_Cs1, a, b)
+resolution_Cs1 = fmwh_Cs_1 / 662 * 100
+print(f"resolution_Cs_137_1 = {resolution_Cs1} en fmwh_Cs_137_1 = {fmwh_Cs_1}")
 
 
-fmwh_Cs3 = fitten_Energy(pulseheight_list_Cs3, counts_Cs3, 0, a, b)
-resolution_Cs3 = fmwh_Cs3 / 510.99 * 100
-print(f"resolution_Cs_3 = {resolution_Cs3} en fmwh_Co_2 = {fmwh_Cs3}")
 
