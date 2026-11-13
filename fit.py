@@ -3,16 +3,17 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 
-def fitten_pulseheight(file, cutoff):
+def fitten_pulseheight(file, cutoff1, cutoff2):
     pulseheight_list = []
     counts = []
     with open(file) as input:
         next(input)
 
+        # 
         for line in input:
             data_cut = line.split(",")
             pulseheight = float(data_cut[0])
-            if pulseheight >= cutoff:
+            if pulseheight >= cutoff1 and pulseheight <= cutoff2 :
                 pulseheight_list.append(float(data_cut[0]))
                 counts.append(float(data_cut[2]))
 
@@ -22,6 +23,10 @@ def fitten_pulseheight(file, cutoff):
     mod = lmfit.models.GaussianModel()
     params = mod.guess(counts, x=pulseheight)
     fit_result = mod.fit(counts, params, x=pulseheight)
+
+    area = fit_result.params['amplitude'].value
+
+    print(f"area= {area} ")
 
     uncertainty = fit_result.params["fwhm"].value
 
@@ -46,23 +51,23 @@ def fitten_pulseheight(file, cutoff):
 # fitten('spectrum_Na22_07')
 
 
-# pulseheight_Na, fwhm_Na, pulseheight_list_Na, counts_Na = fitten_pulseheight(
-#     "spectrum_Na22_07", 0
-# )
+pulseheight_Na, fwhm_Na, pulseheight_list_Na, counts_Na = fitten_pulseheight(
+    "calibration_HPGE/spectrum_Na_22_2", 190,400
+)
 pulseheight_Cs1, fwhm_Cs1, pulse_height_list_Cs1, counts_Cs1 = fitten_pulseheight(
-    "calibration_HPGE/spectrum_Cs_137_1", 200
+    "calibration_HPGE/spectrum_Cs_137_1", 200,1000
 )
 
 pulseheight_Co2, fwhm_C02, pulseheight_list_Co2, counts_Co2 = fitten_pulseheight(
-    "calibration_HPGE/spectrum_Co_60_2", 500
+    "calibration_HPGE/spectrum_Co_60_2", 500,1000
 )
 pulseheight_array = np.array(
-    [ pulseheight_Cs1, pulseheight_Co2]
+    [pulseheight_Na, pulseheight_Cs1, pulseheight_Co2]
 )
 
-Energy_list = [ 662, 1332.5]
+Energy_list = [510.99, 662, 1332.5]
 Energy_array = np.array(Energy_list)
-pulseheight_fwhm = np.array([ fwhm_Cs1, fwhm_C02])
+pulseheight_fwhm = np.array([fwhm_Na, fwhm_Cs1, fwhm_C02])
 
 
 def linear_mod(x, a, b):
@@ -73,6 +78,7 @@ mod = lmfit.Model(linear_mod)
 fit_result = mod.fit(
     Energy_array, a=5, b=0, x=pulseheight_array, weights=1 / pulseheight_fwhm
 )
+print(fit_result.fit_report())
 
 a = fit_result.best_values["a"]
 b = fit_result.best_values["b"]
@@ -125,10 +131,10 @@ def fitten_Energy(list_pulseheight, list_counts, a, b):
     return uncertainty
 
 
-# fitten_Energy(pulseheight_list_Na, counts_Na, a, b)
-# fmwh_Na = fitten_Energy(pulseheight_list_Na, counts_Na, a, b)
-# resolution_Na = fmwh_Na / 510.99 * 100
-# print(f"resolution_Na_22_ = {resolution_Na} en fmwh_Na = {fmwh_Na}")
+
+fmwh_Na = fitten_Energy(pulseheight_list_Na, counts_Na, a, b)
+resolution_Na = fmwh_Na / 510.99 * 100
+print(f"resolution_Na_22_ = {resolution_Na} en fmwh_Na = {fmwh_Na}")
 
 fmwh_Co_2 = fitten_Energy(pulseheight_list_Co2, counts_Co2, a, b)
 resolution_Co2 = fmwh_Co_2 / 1173.2 * 100
