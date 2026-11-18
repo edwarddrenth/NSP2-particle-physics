@@ -180,40 +180,45 @@ plt.ylim(0, 1500)
 plt.grid(True)
 plt.show()
 
+def possible_isotopes(energy, pulseheight, std):
+    # opens theory values and makes a list of the isotopes and photopeaks
+    isotope_list = []
+    photo_peak_list = []
+    with open("tabel_3_gamma_ray_intensities.txt") as input:
+            # skips the first four lines
+            next(input)
+            next(input)
+            next(input)
+            next(input)
 
-# opens theory values and makes a list of the isotopes and photopeaks
-isotope_list = []
-photo_peak_list = []
-with open("tabel_3_gamma_ray_intensities.txt") as input:
-        # skips the first four lines
-        next(input)
-        next(input)
-        next(input)
-        next(input)
+            # adds all the photopeaks and isotopes in a list
+            for line in input:
+                data_cut = line.split("|")
+                isotope = data_cut[0]
+                photo_peak = float(data_cut[1])
 
-        # adds all the photopeaks and isotopes in a list
-        for line in input:
-            data_cut = line.split("|")
-            isotope = data_cut[0]
-            photo_peak = float(data_cut[1])
+                isotope_list.append(isotope)
+                photo_peak_list.append(photo_peak)
 
-            isotope_list.append(isotope)
-            photo_peak_list.append(photo_peak)
+    # gives the range of the measured energies with the uncertainties
+    error_E = EnergyError(pulseheight, std)
+    energy_plus = energy + error_E
+    energy_min = energy - error_E
+    print(f"the error on E is {error_E}")
+    print(f"the energy range is {energy_min} - {energy_plus}")
 
-# gives the range of the measured energies with the uncertainties
-error_E_Na = EnergyError(pulseheight_Na, std_Na)
-energy_Na_plus = energy_Na + error_E_Na
-energy_Na_min = energy_Na - error_E_Na
-print(f"the energy range is {energy_Na_min} - {energy_Na_plus}")
+    # finds the isotope of the source
+    L_possible_isotopes = []
+    for I in range(len(isotope_list)):
+        if photo_peak_list[I] < energy_plus and photo_peak_list[I] >= energy_min:
+            isotopes = isotope_list[I]
+            L_possible_isotopes.append(isotopes)
 
-# finds the isotope of the source
-possible_isotopes = []
-for I in range(len(isotope_list)):
-    if photo_peak_list[I] < energy_Na_plus and photo_peak_list[I] >= energy_Na_min:
-        isotopes = isotope_list[I]
-        possible_isotopes.append(isotopes)
+    print(f"the possible isotopes are {L_possible_isotopes}")
 
-print(f"the possible isotopes are {possible_isotopes}")
+    return L_possible_isotopes
+
+possible_isotopes(energy_Na, pulseheight_Na, std_Na)
 
 
 
